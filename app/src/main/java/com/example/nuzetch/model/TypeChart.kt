@@ -164,10 +164,28 @@ object TypeChart {
         )
     )
 
+    fun fullEffectivenessOf(attacker: PokemonType): Map<PokemonType, Double> {
+        val row = chart[attacker] ?: emptyMap()
+        return PokemonType.entries.associateWith { defender -> row[defender] ?: 1.0}
+    }
+
+
     fun effectivenessOf(attacker: PokemonType, defenders: List<PokemonType>): Double {
         return defenders
             .map { defender -> chart[attacker]?.get(defender) ?: 1.0}
             .fold(1.0) { acc, multiplier -> acc * multiplier }
+    }
+
+    fun weaknessOf(defenders: List<PokemonType>): Map<PokemonType, Double> {
+        return PokemonType.entries
+            .associateWith { attacker -> effectivenessOf(attacker, defenders)}
+            .filter { (_, multiplier) -> multiplier > 1.0}
+    }
+
+    fun resistancesOf(defenders: List<PokemonType>): Map<PokemonType, Double> {
+        return PokemonType.entries
+            .associateWith { attacker -> effectivenessOf(attacker, defenders) }
+            .filter{(_, multiplier) -> multiplier < 1.0}
     }
 }
 
