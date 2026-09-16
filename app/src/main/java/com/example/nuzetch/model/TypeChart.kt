@@ -165,7 +165,7 @@ object TypeChart {
     )
 
     fun fullEffectivenessOf(attacker: PokemonType): Map<PokemonType, Double> {
-        val row = chart[attacker] ?: emptyMap()
+        val row = chart.getValue(attacker)
         return PokemonType.entries.associateWith { defender -> row[defender] ?: 1.0}
     }
 
@@ -185,7 +185,19 @@ object TypeChart {
     fun resistancesOf(defenders: List<PokemonType>): Map<PokemonType, Double> {
         return PokemonType.entries
             .associateWith { attacker -> effectivenessOf(attacker, defenders) }
-            .filter{(_, multiplier) -> multiplier < 1.0}
+            .filter{(_, multiplier) -> multiplier < 1.0 && multiplier > 0.0}
+    }
+
+    fun noEffectOf(defenders: List<PokemonType>): Map<PokemonType, Double> {
+        return PokemonType.entries
+            .associateWith { attacker -> effectivenessOf(attacker, defenders) }
+            .filter{(_, multiplier) -> multiplier == 0.0}
+    }
+
+    fun neutralOf(defenders: List<PokemonType>): Map<PokemonType, Double> {
+        return PokemonType.entries
+            .associateWith { attacker -> effectivenessOf(attacker, defenders) }
+            .filter{(_, multiplier) -> multiplier == 1.0}
     }
 }
 

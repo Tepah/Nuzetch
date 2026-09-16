@@ -72,6 +72,17 @@ class TypeChartTest {
         val res = TypeChart.resistancesOf(listOf(PokemonType.GROUND))
         assertTrue(PokemonType.POISON in res)
         assertTrue(PokemonType.ROCK in res)
-        assertTrue(PokemonType.ELECTRIC in res)
+    }
+
+    @Test
+    fun `normal to Water`() {
+        val res = TypeChart.neutralOf(listOf(PokemonType.WATER))
+        assertTrue(PokemonType.FIGHTING in res)
+        assertTrue(PokemonType.DARK in res)
+    }
+
+    @Test
+    fun `Electric is no Effect on ground`() {
+        assertTrue(PokemonType.ELECTRIC in TypeChart.noEffectOf(listOf(PokemonType.GROUND)))
     }
 }
