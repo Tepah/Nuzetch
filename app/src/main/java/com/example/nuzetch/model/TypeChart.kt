@@ -176,28 +176,23 @@ object TypeChart {
             .fold(1.0) { acc, multiplier -> acc * multiplier }
     }
 
-    fun weaknessOf(defenders: List<PokemonType>): Map<PokemonType, Double> {
-        return PokemonType.entries
-            .associateWith { attacker -> effectivenessOf(attacker, defenders)}
-            .filter { (_, multiplier) -> multiplier > 1.0}
+    fun weaknessOf(defenders: List<PokemonType>): List<PokemonType> {
+        return PokemonType.entries.filter { attacker -> effectivenessOf(attacker, defenders) > 1.0 }
     }
 
-    fun resistancesOf(defenders: List<PokemonType>): Map<PokemonType, Double> {
-        return PokemonType.entries
-            .associateWith { attacker -> effectivenessOf(attacker, defenders) }
-            .filter{(_, multiplier) -> multiplier < 1.0 && multiplier > 0.0}
+    fun resistancesOf(defenders: List<PokemonType>): List<PokemonType> {
+        return PokemonType.entries.filter { attacker ->
+            val multiplier = effectivenessOf(attacker, defenders)
+            multiplier < 1.0 && multiplier > 0.0
+        }
     }
 
-    fun noEffectOf(defenders: List<PokemonType>): Map<PokemonType, Double> {
-        return PokemonType.entries
-            .associateWith { attacker -> effectivenessOf(attacker, defenders) }
-            .filter{(_, multiplier) -> multiplier == 0.0}
+    fun noEffectOf(defenders: List<PokemonType>): List<PokemonType> {
+        return PokemonType.entries.filter { attacker -> effectivenessOf(attacker, defenders) == 0.0 }
     }
 
-    fun neutralOf(defenders: List<PokemonType>): Map<PokemonType, Double> {
-        return PokemonType.entries
-            .associateWith { attacker -> effectivenessOf(attacker, defenders) }
-            .filter{(_, multiplier) -> multiplier == 1.0}
+    fun neutralOf(defenders: List<PokemonType>): List<PokemonType> {
+        return PokemonType.entries.filter { attacker -> effectivenessOf(attacker, defenders) == 1.0 }
     }
 }
 
