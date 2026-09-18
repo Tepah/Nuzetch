@@ -194,5 +194,24 @@ object TypeChart {
     fun neutralOf(defenders: List<PokemonType>): List<PokemonType> {
         return PokemonType.entries.filter { attacker -> effectivenessOf(attacker, defenders) == 1.0 }
     }
+
+    // The largest any single weakness/resistance/no-effect/neutral row can get,
+    // checked across every reachable 1- or 2-type selection (selection is capped at 2).
+    // Computed once and cached so UI can size icons off a real bound instead of a guess.
+    val maxResultRowSize: Int by lazy {
+        val singleTypeCombos = PokemonType.entries.map { listOf(it) }
+        val dualTypeCombos = PokemonType.entries.flatMapIndexed { index, first ->
+            PokemonType.entries.drop(index + 1).map { second -> listOf(first, second) }
+        }
+
+        (singleTypeCombos + dualTypeCombos).maxOf { defenders ->
+            maxOf(
+                weaknessOf(defenders).size,
+                resistancesOf(defenders).size,
+                noEffectOf(defenders).size,
+                neutralOf(defenders).size
+            )
+        }
+    }
 }
 
