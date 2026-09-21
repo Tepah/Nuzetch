@@ -177,7 +177,11 @@ object TypeChart {
     }
 
     fun weaknessOf(defenders: List<PokemonType>): List<PokemonType> {
-        return PokemonType.entries.filter { attacker -> effectivenessOf(attacker, defenders) > 1.0 }
+        return PokemonType.entries.filter { attacker -> effectivenessOf(attacker, defenders) == 2.0 }
+    }
+
+    fun doubleWeaknessOf(defenders: List<PokemonType>): List<PokemonType> {
+        return PokemonType.entries.filter { attacker -> effectivenessOf(attacker, defenders) > 2.0}
     }
 
     fun resistancesOf(defenders: List<PokemonType>): List<PokemonType> {
@@ -207,6 +211,7 @@ object TypeChart {
         (singleTypeCombos + dualTypeCombos).maxOf { defenders ->
             maxOf(
                 weaknessOf(defenders).size,
+                doubleWeaknessOf(defenders).size,
                 resistancesOf(defenders).size,
                 noEffectOf(defenders).size,
                 neutralOf(defenders).size

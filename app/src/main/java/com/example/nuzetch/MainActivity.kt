@@ -4,6 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,25 +26,25 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.nuzetch.model.PokemonType
 import com.example.nuzetch.model.TypeChart
@@ -60,6 +67,7 @@ class MainActivity : ComponentActivity() {
 fun WeaknessChart(modifier: Modifier = Modifier) {
     var selectedTypes by remember { mutableStateOf<List<PokemonType>>(emptyList())}
 
+    val doubleWeaknesses = TypeChart.doubleWeaknessOf(selectedTypes)
     val weaknesses = TypeChart.weaknessOf(selectedTypes)
     val resistances = TypeChart.resistancesOf(selectedTypes)
     val noEffect = TypeChart.noEffectOf(selectedTypes)
@@ -78,15 +86,16 @@ fun WeaknessChart(modifier: Modifier = Modifier) {
 
     val (leftTypes, rightTypes) = PokemonType.entries.chunked(9)
 
-    // One color per result row, top to bottom; each row's background gradients
-    // from its own color into the next row's color so the four rows seam into
-    // a single continuous white -> green -> yellow -> red gradient.
-    // Dimmed down (lower alpha) so the type icons pop against it instead of competing with it.
-    val resultRowColors = listOf(Color.White, Color(0xFFC8E6C9), Color(0xFFFFF9C4), Color(0xFFFFCDD2))
-        .map { it.copy(alpha = 0.55f) }
+    // Sets the row colors
+    val resultRowColors = listOf(
+        Color(0xFF43A047).copy(alpha = 0.7f),  // 4x - vivid green
+        Color(0xFFA5D6A7).copy(alpha = 0.55f), // 2x - soft green
+        Color(0xFFE0E0E0).copy(alpha = 0.55f), // 1x - neutral gray
+        Color(0xFFE57373).copy(alpha = 0.55f), // 0.5x - red
+        Color(0xFFB0BEC5).copy(alpha = 0.55f), // 0x - neutral slate
+    )
 
-    // Caller controls how much space is offered (fillMaxSize, a fixed size, padding, etc.);
-    // this always renders as the largest centered 4:3 rectangle that fits within it.
+    // Box that always renders at 4/3 to keep aspect ratio regardless of device.
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Row(modifier = Modifier.aspectRatio(4f / 3f)) {
             TypeZigzag(
@@ -96,106 +105,21 @@ fun WeaknessChart(modifier: Modifier = Modifier) {
                 modifier = Modifier.weight(0.8f).fillMaxHeight()
             )
 
-            Column(
-                modifier = Modifier.weight(1.6f).padding(horizontal = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            ColumnDivider()
 
-                BoxWithConstraints(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .horizontalFeatheredBackground(Brush.verticalGradient(listOf(resultRowColors[0], resultRowColors[1]))),
-                ) {
-                if (weaknesses.isNotEmpty()) {
-                        val iconSize = (maxHeight / maxResultTypes) * 6f
-                        FlowRow(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            weaknesses.forEach { weakness ->
-                                TypeIcon(
-                                    type = weakness,
-                                    isSelected = true,
-                                    modifier = Modifier.requiredSize(iconSize)
-                                )
-                            }
-                        }
-                    }
-                }
+            WeaknessDistribution(
+                doubleWeakness = doubleWeaknesses,
+                weakness = weaknesses,
+                resistances = resistances,
+                neutral = neutral,
+                noEffect = noEffect,
+                selectedTypes = selectedTypes,
+                maxResultTypes = maxResultTypes,
+                resultRowColors = resultRowColors,
+                modifier = Modifier.weight(1.6f).padding(horizontal = 8.dp)
+            )
 
-
-                BoxWithConstraints(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .horizontalFeatheredBackground(Brush.verticalGradient(listOf(resultRowColors[1], resultRowColors[2]))),
-                ) {
-                if (resistances.isNotEmpty()) {
-                        val iconSize = (maxHeight / maxResultTypes) * 6f
-                        FlowRow(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            resistances.forEach { resist ->
-                                TypeIcon(
-                                    type = resist,
-                                    isSelected = true,
-                                    modifier = Modifier.requiredSize(iconSize)
-                                )
-                            }
-                        }
-                    }
-                }
-
-
-                BoxWithConstraints(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .horizontalFeatheredBackground(Brush.verticalGradient(listOf(resultRowColors[2], resultRowColors[3]))),
-                ) {
-                if (selectedTypes.isNotEmpty() && neutral.isNotEmpty()) {
-                        val iconSize = (maxHeight / maxResultTypes) * 6f
-                        FlowRow(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            neutral.forEach { weakness ->
-                                TypeIcon(
-                                    type = weakness,
-                                    isSelected = true,
-                                    modifier = Modifier.requiredSize(iconSize)
-                                )
-                            }
-                        }
-                    }
-                }
-
-
-                BoxWithConstraints(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .horizontalFeatheredBackground(SolidColor(resultRowColors[3])),
-                ) {
-                if (noEffect.isNotEmpty()) {
-                        val iconSize = (maxHeight / maxResultTypes) * 6f
-                        FlowRow(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            noEffect.forEach { non ->
-                                TypeIcon(
-                                    type = non,
-                                    isSelected = true,
-                                    modifier = Modifier.requiredSize(iconSize)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            ColumnDivider()
 
             TypeZigzag(
                 types = rightTypes,
@@ -208,37 +132,152 @@ fun WeaknessChart(modifier: Modifier = Modifier) {
     }
 }
 
-// Paints `brush` as a background, then fades the left/right edges of this node
-// (background included) down to transparent, so it softly feathers out at the
-// sides instead of ending in a hard vertical line.
-//
-// The background is applied *after* graphicsLayer/*before* drawWithContent so it
-// lands inside the same offscreen layer that gets masked — a plain
-// `.background(brush).horizontalFeather()` chain would only feather the content
-// drawn on top of the background (e.g. icons), not the background fill itself,
-// since it'd be drawn outside the offscreen layer.
-private fun Modifier.horizontalFeatheredBackground(brush: Brush): Modifier = this
-    .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-    .background(brush)
-    .drawWithContent {
-        drawContent()
-        drawRect(
-            brush = Brush.horizontalGradient(
-                colors = listOf(Color.Transparent, Color.Black, Color.Black, Color.Transparent)
-            ),
-            blendMode = BlendMode.DstIn
-        )
-    }
+@Composable
+private fun ColumnDivider() {
+    Box(
+        modifier = Modifier
+            .fillMaxHeight()
+            .padding(vertical = 24.dp)
+            .width(1.dp)
+            .background(Color.Gray)
+    )
+}
 
 @Composable
 private fun WeaknessDistribution(
+    doubleWeakness: List<PokemonType>,
     weakness: List<PokemonType>,
     noEffect: List<PokemonType>,
     resistances: List<PokemonType>,
-    normal: List<PokemonType>,
+    neutral: List<PokemonType>,
+    selectedTypes: List<PokemonType>,
+    maxResultTypes: Int,
+    resultRowColors: List<Color>,
     modifier: Modifier = Modifier
 ) {
+    // false = show weaknesses (4x, 2x, 1x), true = show resistances (0.5x, 0x)
+    var isResistanceMode by remember { mutableStateOf(false) }
 
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        val stackedRowColors = if (isResistanceMode) {
+            listOf(resultRowColors[3], resultRowColors[4])
+        } else {
+            listOf(resultRowColors[0], resultRowColors[1], resultRowColors[2])
+        }
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .background(rowStackGradient(stackedRowColors))
+        ) {
+            if (isResistanceMode) {
+                ResultRow(
+                    label = "0.5x",
+                    types = resistances,
+                    maxResultTypes = maxResultTypes,
+                    modifier = Modifier.weight(1f)
+                )
+                ResultRow(
+                    label = "0x",
+                    types = noEffect,
+                    maxResultTypes = maxResultTypes,
+                    modifier = Modifier.weight(1f)
+                )
+            } else {
+                ResultRow(
+                    label = "4x",
+                    types = doubleWeakness,
+                    maxResultTypes = maxResultTypes,
+                    modifier = Modifier.weight(1f)
+                )
+                ResultRow(
+                    label = "2x",
+                    types = weakness,
+                    maxResultTypes = maxResultTypes,
+                    modifier = Modifier.weight(1f)
+                )
+                ResultRow(
+                    label = "1x",
+                    types = neutral,
+                    visible = selectedTypes.isNotEmpty() && neutral.isNotEmpty(),
+                    maxResultTypes = maxResultTypes,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
+        WeaknessResistanceSwitch(
+            isResistanceMode = isResistanceMode,
+            onModeChange = { isResistanceMode = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(stackedRowColors.last())
+                .padding(top = 8.dp, bottom = 4.dp)
+        )
+    }
+}
+
+// Builds one continuous gradient across a whole row stack, with each row's color
+// centered on its own slice, so neighboring rows blend into each other instead of
+// each row fading independently and leaving a hard seam at the shared edge.
+private fun rowStackGradient(colors: List<Color>): Brush {
+    val colorStops = colors.mapIndexed { index, color ->
+        ((index + 0.5f) / colors.size) to color
+    }
+    return Brush.verticalGradient(*colorStops.toTypedArray())
+}
+
+@Composable
+private fun ResultRow(
+    label: String,
+    types: List<PokemonType>,
+    maxResultTypes: Int,
+    modifier: Modifier = Modifier,
+    visible: Boolean = types.isNotEmpty(),
+) {
+    BoxWithConstraints(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            fontWeight = FontWeight.Bold,
+            color = Color.Gray,
+            modifier = Modifier.align(Alignment.TopStart).padding(4.dp)
+        )
+        if (visible) {
+            val iconSize = (maxHeight / maxResultTypes) * 6f
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                types.forEach { type ->
+                    AnimatedTypeIcon(type = type, iconSize = iconSize)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeaknessResistanceSwitch(
+    isResistanceMode: Boolean,
+    onModeChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+    ) {
+        Text(text = "Weak", fontWeight = if (!isResistanceMode) FontWeight.Bold else FontWeight.Normal)
+        Switch(checked = isResistanceMode, onCheckedChange = onModeChange)
+        Text(text = "Resist", fontWeight = if (isResistanceMode) FontWeight.Bold else FontWeight.Normal)
+    }
 }
 
 @Composable
@@ -249,10 +288,7 @@ private fun TypeZigzag(
     modifier: Modifier = Modifier,
     startFromEnd: Boolean = false,
 ) {
-    /*
-        Function Creates a zigzag pattern for the list of pokemon types
-        startFromEnd decides whether the type is starting from the left or right.
-     */
+    // Creates a zigzag pattern to the left and right columns
     BoxWithConstraints(modifier = modifier) {
         val iconSize = (maxHeight / types.size) * 1.5f
 
@@ -295,6 +331,34 @@ private fun TypeIcon(
             .aspectRatio(1f)
             .clickable(onClick = onClick)
     )
+}
+
+// Creates an animated type icon that fades in from the top of it's set location when a new one gets
+// generated.
+@Composable
+private fun AnimatedTypeIcon(type: PokemonType, iconSize: Dp) {
+    key(type) {
+        val visibleState = remember { MutableTransitionState(false) }
+        visibleState.targetState = true
+
+        AnimatedVisibility(
+            visibleState = visibleState,
+            enter = fadeIn(animationSpec = tween(durationMillis = 300)) +
+                slideInVertically(
+                    initialOffsetY = { fullHeight -> -fullHeight / 3 },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                )
+        ) {
+            TypeIcon(
+                type = type,
+                isSelected = true,
+                modifier = Modifier.requiredSize(iconSize)
+            )
+        }
+    }
 }
 
 @Preview(showBackground = true, widthDp = 1240, heightDp = 1080, name = "Thor Bottom")
