@@ -1,5 +1,6 @@
 package com.example.nuzetch
 
+import android.graphics.Paint
 import android.os.Bundle
 import android.view.RoundedCorner
 import androidx.activity.ComponentActivity
@@ -82,11 +83,23 @@ fun NuzetchDevice(modifier: Modifier = Modifier) {
     var onApp by remember { mutableIntStateOf(0) }
     val appCount = 4
 
+    fun onClick(direction: Int) {
+        onApp += direction
+        if (onApp < 0) {
+            onApp = appCount - 1
+        } else if (onApp >= 4) {
+            onApp = 0
+        }
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color(0xFF646464)
     ) {
-        Column( modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -95,43 +108,54 @@ fun NuzetchDevice(modifier: Modifier = Modifier) {
             ) {
                 Button(
                     modifier = Modifier
-                        .height(192.dp)
+                        .height(164.dp)
                         .width(384.dp),
-                    onClick = ({})
+                    shape = RoundedCornerShape(16.dp),
+                    onClick = ({onClick(-1)})
                 )
                 {}
 
                 Row(
                     modifier = Modifier
                         .padding(top = 64.dp),
-                    horizontalArrangement = Arrangement.spacedBy(32.dp)
+                    horizontalArrangement = Arrangement.spacedBy(32.dp), 
+                    verticalAlignment = Alignment.CenterVertically
                 )
                 {
                     for (i in 0 until appCount) {
-                        Box(
-                            modifier = Modifier
-                                .size(16.dp)
-                                .clip(CircleShape)
-                                .background(Color.Gray)
-                                .padding(6.dp),
-                            contentAlignment = Alignment.Center
-                        )
-                        {}
+                        if (i == onApp) {
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF06FF09))
+                                    .padding(6.dp)
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.Gray)
+                                    .padding(6.dp)
+                            )
+                        }
                     }
                 }
 
                 Button(
                     modifier = Modifier
-                        .height(192.dp)
+                        .height(164.dp)
                         .width(384.dp),
-                    onClick = ({})
+                    shape = RoundedCornerShape(16.dp),
+                    onClick = ({onClick(1)})
                 )
                 {}
             }
 
             Box(
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(start=16.dp, end=16.dp, bottom=16.dp)
                     .background(Color.White, RoundedCornerShape(32.dp))
                     .fillMaxSize()
                     .innerShadow(
@@ -145,7 +169,13 @@ fun NuzetchDevice(modifier: Modifier = Modifier) {
                     )
             )
             {
-
+                when (onApp) {
+                    0 -> WeaknessChart()
+                    1 -> Text("Pokedex")
+                    2 -> Text("Other page")
+                    3 -> Text("Calculator")
+                    else -> Text("HAHAHAHA")
+                }
             }
         }
     }
@@ -185,8 +215,8 @@ fun WeaknessChart(modifier: Modifier = Modifier) {
     )
 
     // Box that always renders at 4/3 to keep aspect ratio regardless of device.
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Row(modifier = Modifier.aspectRatio(4f / 3f)) {
+    Box(modifier = modifier.fillMaxSize().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
+        Row(modifier = Modifier) {
             TypeZigzag(
                 types = leftTypes,
                 selectedTypes = selectedTypes,
