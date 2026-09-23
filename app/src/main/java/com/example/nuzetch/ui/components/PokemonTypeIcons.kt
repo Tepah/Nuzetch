@@ -1,7 +1,8 @@
-package com.example.nuzetch.model
+package com.example.nuzetch.ui.components
 
 import androidx.annotation.DrawableRes
 import com.example.nuzetch.R
+import com.example.nuzetch.model.PokemonType
 
 @get:DrawableRes
 val PokemonType.iconRes: Int

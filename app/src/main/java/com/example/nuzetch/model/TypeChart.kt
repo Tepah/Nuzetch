@@ -1,7 +1,6 @@
 package com.example.nuzetch.model
 
 import kotlin.collections.mapOf
-import kotlin.test.assertEquals
 
 object TypeChart {
 
