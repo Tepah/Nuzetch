@@ -30,12 +30,13 @@ import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import com.example.nuzetch.ui.pokedex.PokedexLookup
 import com.example.nuzetch.ui.theme.NuzetchTheme
 import com.example.nuzetch.ui.weakness.WeaknessChart
 
 @Composable
 fun NuzetchDevice(modifier: Modifier = Modifier) {
-    var currentPage by remember { mutableStateOf(DevicePage.WEAKNESS) }
+    var currentPage by remember { mutableStateOf(DevicePage.POKEDEX) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -90,7 +91,7 @@ fun NuzetchDevice(modifier: Modifier = Modifier) {
             {
                 when (currentPage) {
                     DevicePage.WEAKNESS -> WeaknessChart()
-                    DevicePage.POKEDEX -> Text("Pokedex")
+                    DevicePage.POKEDEX -> PokedexLookup()
                     DevicePage.OTHER -> Text("Other page")
                     DevicePage.CALCULATOR -> Text("Calculator")
                 }

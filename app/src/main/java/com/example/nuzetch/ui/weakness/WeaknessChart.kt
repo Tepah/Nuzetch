@@ -59,7 +59,6 @@ fun WeaknessChart(modifier: Modifier = Modifier) {
         Color(0xFFB0BEC5).copy(alpha = 0.55f), // 0x - neutral slate
     )
 
-    // Box that always renders at 4/3 to keep aspect ratio regardless of device.
     Box(modifier = modifier.fillMaxSize().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
         Row(modifier = Modifier) {
             TypeZigzag(
