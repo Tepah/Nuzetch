@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nuzetch.R
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Surface
 import com.example.nuzetch.model.PokedexEntry
 import com.example.nuzetch.ui.components.TypeIcon
 import kotlinx.serialization.json.Json
@@ -53,6 +54,7 @@ fun PokedexLookup() {
         Json.decodeFromString<List<PokedexEntry>>(text)
     }
     var currentPokemon: PokedexEntry? by remember {mutableStateOf(null)}
+    var showMoveList by remember {mutableStateOf(true)}
 
     fun onRowClick (pokemon: PokedexEntry) {
         currentPokemon = pokemon
@@ -60,9 +62,11 @@ fun PokedexLookup() {
 
     // Pokemon on the left
     Row(Modifier
-        .padding(32.dp)) {
+        .padding(horizontal = 16.dp)) {
         // Column for the Pokemon Icon
-        Box(Modifier.weight(3f)) {
+        Box(Modifier
+            .weight(3f)
+            .padding(32.dp)) {
             Column(Modifier) {
                 Box(
                     Modifier
@@ -102,12 +106,22 @@ fun PokedexLookup() {
                 }
                 Box(
                     Modifier
-                        .padding(16.dp)
+                        .padding(vertical = 16.dp)
                         .weight(5f)
                         .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.BottomEnd
                 )
-                {}
+                {
+                    Box(Modifier
+                        .shadow(8.dp, RoundedCornerShape(24.dp))
+                        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+                        .border(2.dp, Color.Gray, RoundedCornerShape(24.dp))
+                        .padding(16.dp)
+                        .clickable(onClick={}))
+                    {
+                        Text("...", fontSize = 32.sp)
+                    }
+                }
                 Box(
                     Modifier
                         .weight(2f)
@@ -122,13 +136,32 @@ fun PokedexLookup() {
         }
 
 
-        LazyColumn(Modifier
-            .padding(horizontal = 48.dp)
-            .weight(3f)) {
-            items(allPokemon, key = { it.id }) { pokemon ->
-                PokedexRow(pokemon, ::onRowClick)
+        Box (Modifier
+            .weight(3f))
+        {
+            LazyColumn(Modifier
+                .padding(horizontal = 48.dp)) {
+                items(allPokemon, key = { it.id }) { pokemon ->
+                    PokedexRow(pokemon, ::onRowClick)
+                }
+            }
+
+            if (showMoveList) {
+                Surface(
+                    Modifier
+                        .padding(horizontal = 8.dp, vertical = 32.dp)
+                        .fillMaxSize()
+                        .shadow(8.dp, RoundedCornerShape(24.dp))
+                        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+                        .border(2.dp, Color.Gray, RoundedCornerShape(24.dp))
+                )
+                {
+
+                }
             }
         }
+
+
     }
 
 
