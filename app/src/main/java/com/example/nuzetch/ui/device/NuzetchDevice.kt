@@ -14,9 +14,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,62 +41,73 @@ import com.example.nuzetch.ui.weakness.WeaknessChart
 fun NuzetchDevice(modifier: Modifier = Modifier) {
     var currentPage by remember { mutableStateOf(DevicePage.POKEDEX) }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color(0xFF646464)
+    // Everything below is designed at 1240x1080dp and scaled to fit any screen
+    FixedCanvas(
+        designWidth = 1240.dp,
+        designHeight = 1080.dp,
+        letterboxColor = Color(0xFF3A3A3A)
     ) {
-        Column(
+        Surface(
             modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(
+            color = Color(0xFF646464)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                Row(
                     modifier = Modifier
-                        .height(164.dp)
-                        .width(384.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    onClick = { currentPage = currentPage.step(-1) }
-                )
-                {}
-
-                PageIndicator(currentPage = currentPage)
-
-                Button(
-                    modifier = Modifier
-                        .height(164.dp)
-                        .width(384.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    onClick = { currentPage = currentPage.step(1) }
-                )
-                {}
-            }
-
-            Box(
-                modifier = Modifier
-                    .padding(start=16.dp, end=16.dp, bottom=16.dp)
-                    .background(Color.White, RoundedCornerShape(32.dp))
-                    .fillMaxSize()
-                    .innerShadow(
-                        shape = RoundedCornerShape(32.dp),
-                        shadow = Shadow(
-                            radius = 8.dp,
-                            spread = 2.dp,
-                            color = Color(0x66000000),
-                            offset = DpOffset(8.dp, 6.dp)
-                        )
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Button(
+                        modifier = Modifier
+                            .height(164.dp)
+                            .width(384.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        onClick = { currentPage = currentPage.step(-1) }
                     )
-            )
-            {
-                when (currentPage) {
-                    DevicePage.WEAKNESS -> WeaknessChart()
-                    DevicePage.POKEDEX -> PokedexLookup()
-                    DevicePage.OTHER -> Text("Other page")
-                    DevicePage.CALCULATOR -> Text("Calculator")
+                    {}
+
+                    PageIndicator(currentPage = currentPage)
+
+                    Button(
+                        modifier = Modifier
+                            .height(164.dp)
+                            .width(384.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        onClick = { currentPage = currentPage.step(1) }
+                    )
+                    {}
+                }
+
+                Box(
+                    modifier = Modifier
+                        .padding(start=16.dp, end=16.dp, bottom=16.dp)
+                        .clip(RoundedCornerShape(32.dp))
+                        .background(MaterialTheme.colorScheme.background, RoundedCornerShape(32.dp))
+                        .fillMaxSize()
+                        .innerShadow(
+                            shape = RoundedCornerShape(32.dp),
+                            shadow = Shadow(
+                                radius = 8.dp,
+                                spread = 2.dp,
+                                color = Color(0x66000000),
+                                offset = DpOffset(8.dp, 6.dp)
+                            )
+                        )
+                )
+                {
+                    // The screen isn't a Surface, so tell its text which color to use
+                    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
+                        when (currentPage) {
+                            DevicePage.WEAKNESS -> WeaknessChart()
+                            DevicePage.POKEDEX -> PokedexLookup()
+                            DevicePage.OTHER -> Text("Other page")
+                            DevicePage.CALCULATOR -> Text("Calculator")
+                        }
+                    }
                 }
             }
         }
