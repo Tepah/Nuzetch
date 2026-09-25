@@ -307,6 +307,12 @@ fun PokemonList(
 fun MoveListPanel(visible: Boolean) {
     val slideSpring = spring<IntOffset>(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow)
 
+    var currentTab by remember {mutableStateOf("Moves")}
+
+    fun onTabClick(type:String) {
+        currentTab = type
+    }
+
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically(initialOffsetY = { 2500 }, animationSpec = slideSpring),
@@ -325,19 +331,32 @@ fun MoveListPanel(visible: Boolean) {
                     Text("X", Modifier.padding(top = 32.dp, end = 32.dp).clickable {}, fontSize = 32.sp)
                 }
 
-                val movesColor = Color(0xFFF4A7A3)
-                val abilitiesColor = Color(0xFFA7C7F4)
-                val varietiesColor = Color(0xFFB5E3A8)
+                val movesColor = Color(0xFFF5DCB8)
+                val abilitiesColor = Color(0xFFEECD94)
+                val varietiesColor = Color(0xFFF3B777)
 
                 Row(Modifier.fillMaxWidth()) {
-                    TabButton(tabName = "Moves", color = movesColor, selected = true)
-                    TabButton(tabName = "Abilities", color = abilitiesColor, selected = false, middle = true)
+                    TabButton(tabName = "Moves",
+                        color = movesColor,
+                        onClick = { onTabClick("Moves") })
+                    TabButton(tabName = "Abilities",
+                        color = abilitiesColor,
+                        middle = true,
+                        onClick = { onTabClick("Abilities") })
                     //Todo: Make so that only shows if there are more forms
-                    TabButton(tabName = "Varieties", color = varietiesColor, selected = false, middle = true)
+                    TabButton(tabName = "Varieties",
+                        color = varietiesColor,
+                        middle = true,
+                        onClick = { onTabClick("Varieties") })
                 }
 
                 // Same color as the selected tab so the two read as one folder
-                Surface(Modifier.fillMaxSize(), color = movesColor, shape = RoundedCornerShape(topEnd = 16.dp)) {
+                val panelColor = when (currentTab) {
+                    "Abilities" -> abilitiesColor
+                    "Varieties" -> varietiesColor
+                    else -> movesColor
+                }
+                Surface(Modifier.fillMaxSize(), color = panelColor, shape = RoundedCornerShape(topEnd = 16.dp)) {
 
                 }
             }
@@ -346,10 +365,16 @@ fun MoveListPanel(visible: Boolean) {
 }
 
 @Composable
-fun TabButton(modifier: Modifier = Modifier, tabName: String, color: Color, selected: Boolean, middle: Boolean = false) {
+fun TabButton(modifier: Modifier = Modifier,
+              tabName: String,
+              color: Color,
+              middle: Boolean = false,
+              onClick: () -> Unit) {
     val topStartRadius = if (middle) 16.dp else 0.dp
     val topEndRadius = 16.dp
-    Surface(modifier,
+
+    Surface(modifier
+        .clickable(onClick = onClick),
         color = color,
         shape = RoundedCornerShape(topStart = topStartRadius, topEnd = topEndRadius) ) { Text(tabName,
         Modifier.padding(24.dp), fontSize = 32.sp) }
